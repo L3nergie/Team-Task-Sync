@@ -9,6 +9,23 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.metrics import dp
 from kivy.utils import get_color_from_hex
 from kivy.graphics import Color, Rectangle
+from kivy.uix.textinput import TextInput
+
+from widgets_fixes.assistant.messenger import AssistantMessenger, Image
+from widgets_fixes.team.messenger import TeamMessenger
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
+import os
+
+primary_color = get_color_from_hex("#4CAF50")  # Vert vif
+secondary_color = get_color_from_hex("#6C9BCF")  # Bleu clair
+accent_color = get_color_from_hex("#FFA726")  # Orange énergique
+warning_color = get_color_from_hex("#FF6F61")
+text_color = get_color_from_hex("#FFFFFF")  # Texte blanc
+background_color = get_color_from_hex("#F9F9F9")  # Fond gris très clair
+dark_color = get_color_from_hex("#333333")
 
 class MainLayout(BoxLayout):
     def __init__(self, **kwargs):
@@ -38,13 +55,83 @@ class MainLayout(BoxLayout):
             text="+",
             size_hint=(None, None),
             size=(dp(50), dp(50)),
-            background_color=get_color_from_hex("#FFA726"),  # Orange énergique
-            color=get_color_from_hex("#FFFFFF"),  # Texte blanc
+            background_color=accent_color,  # Orange énergique
+            color=text_color,  # Texte blanc
             font_size=dp(20)
         )
         self.add_button.bind(on_release=self.add_new_tab)
         self.tab_panel.add_widget(self.add_button)
 
+        # Pied de page fixe pour les widgets
+        self.footer = BoxLayout(
+            orientation="horizontal",  # Changé à horizontal pour afficher côte à côte
+            size_hint=(1, None),
+            height=dp(50),  # Hauteur réduite par défaut
+            spacing=dp(5),
+            padding=dp(5)
+        )
+        self.add_widget(self.footer)
+
+        # Ajouter les widgets AssistantMessenger et TeamMessenger
+        self.add_widgets_to_footer()
+
+    def add_widgets_to_footer(self):
+        """Ajoute les widgets AssistantMessenger et TeamMessenger au pied de page avec un style amélioré."""
+        self.footer.clear_widgets()  # Nettoyer le footer avant d'ajouter de nouveaux widgets
+
+        # Bouton pour ouvrir le Widget AssistantMessenger
+        self.assistant_button = Button(
+            text="[size=20]🤖[/size]",  # Utilisation d'une icône
+            markup=True,
+            size_hint_y=None,
+            height=dp(50),
+            background_color=primary_color,  # Vert vif
+            color=text_color,  # Texte blanc
+            background_normal='',  # Supprime l'image de fond par défaut
+            border=(0, 0, 0, 0)  # Supprime la bordure
+        )
+        self.assistant_button.bind(on_release=lambda btn: self.toggle_widget(self.assistant_messenger))
+        self.footer.add_widget(self.assistant_button)
+
+        # Bouton pour ouvrir le Widget TeamMessenger
+        self.team_button = Button(
+            text="[size=20]👥[/size]",  # Utilisation d'une icône
+            markup=True,
+            size_hint_y=None,
+            height=dp(50),
+            background_color=secondary_color,  # Bleu clair
+            color=text_color,  # Texte blanc
+            background_normal='',  # Supprime l'image de fond par défaut
+            border=(0, 0, 0, 0)  # Supprime la bordure
+        )
+        self.team_button.bind(on_release=lambda btn: self.toggle_widget(self.team_messenger))
+        self.footer.add_widget(self.team_button)
+
+        # Ajouter les widgets AssistantMessenger et TeamMessenger
+        self.assistant_messenger = AssistantMessenger(size_hint_y=dp(5), height=dp(5))
+        self.assistant_messenger.height = 0  # Réduit par défaut
+        self.footer.add_widget(self.assistant_messenger)
+
+        self.team_messenger = TeamMessenger(size_hint_y=dp(5), height=dp(5))
+        self.team_messenger.height = 0  # Réduit par défaut
+        self.footer.add_widget(self.team_messenger)
+
+    def close_app(self, instance):
+        """Ferme l'application."""
+        App.get_running_app().stop()
+
+    def toggle_widget(self, widget):
+        """Réduit ou affiche le widget spécifié."""
+        logging.debug(f"Toggling widget: {widget}")
+        if widget.size_hint_y is None:
+            widget.size_hint_y = 1  # Affiche le widget
+            widget.height = dp(200)  # Définit une hauteur fixe
+            logging.debug(f"Widget {widget} is now visible")
+        else:
+            widget.size_hint_y = None  # Cache le widget
+            widget.height = 0  # Réduit la hauteur à 0
+            logging.debug(f"Widget {widget} is now hidden")
+        self.footer.do_layout()  # Force la mise à jour de la mise en page
     def create_menu_bar(self):
         """Crée une barre de menu officielle en haut."""
         menu_bar = BoxLayout(
@@ -57,7 +144,7 @@ class MainLayout(BoxLayout):
 
         # Ajouter un fond coloré avec un Canvas
         with menu_bar.canvas.before:
-            Color(*get_color_from_hex("#6C9BCF"))  # Bleu clair
+            Color(*secondary_color)  # Bleu clair
             menu_bar.rect = Rectangle(size=menu_bar.size, pos=menu_bar.pos)
         menu_bar.bind(size=self._update_rect, pos=self._update_rect)
 
@@ -66,8 +153,8 @@ class MainLayout(BoxLayout):
             text="Fichier",
             size_hint=(None, 1),
             width=dp(100),
-            background_color=get_color_from_hex("#6C9BCF"),  # Bleu clair
-            color=get_color_from_hex("#FFFFFF"),  # Texte blanc
+            background_color=secondary_color,  # Bleu clair
+            color=text_color,  # Texte blanc
             bold=True
         )
         file_button.bind(on_release=self.show_file_menu)
@@ -78,8 +165,8 @@ class MainLayout(BoxLayout):
             text="Aide",
             size_hint=(None, 1),
             width=dp(100),
-            background_color=get_color_from_hex("#6C9BCF"),  # Bleu clair
-            color=get_color_from_hex("#FFFFFF"),  # Texte blanc
+            background_color=secondary_color,  # Bleu clair
+            color=text_color,  # Texte blanc
             bold=True
         )
         help_button.bind(on_release=self.show_help_menu)
@@ -101,8 +188,8 @@ class MainLayout(BoxLayout):
             text="Quitter",
             size_hint_y=None,
             height=dp(40),
-            background_color=get_color_from_hex("#FF6F61"),  # Rouge vif
-            color=get_color_from_hex("#FFFFFF")  # Texte blanc
+            background_color=get_color_from_hex(warning_color),  # Rouge vif
+            color=text_color  # Texte blanc
         )
         quit_button.bind(on_release=self.quit_app)
         file_dropdown.add_widget(quit_button)
@@ -120,8 +207,8 @@ class MainLayout(BoxLayout):
             text="À propos",
             size_hint_y=None,
             height=dp(40),
-            background_color=get_color_from_hex("#4CAF50"),  # Vert vif
-            color=get_color_from_hex("#FFFFFF")  # Texte blanc
+            background_color=primary_color,  # Vert vif
+            color=text_color  # Texte blanc
         )
         about_button.bind(on_release=self.show_about_popup)
         help_dropdown.add_widget(about_button)
@@ -136,8 +223,8 @@ class MainLayout(BoxLayout):
 
     def show_about_popup(self, instance):
         """Affiche une popup 'À propos'."""
-        popup = Popup(title="À propos", size_hint=(0.8, 0.4))
-        popup.content = Label(text="Team-Task-Sync\nVersion 1.0\n© 2023")
+        popup_content = Label(text="Team-Task-Sync\nVersion 1.0\n© 2023")
+        popup = Popup(title="À propos", content=popup_content, size_hint=(0.8, 0.4))
         popup.open()
 
     def create_widget_buttons(self):
@@ -152,7 +239,7 @@ class MainLayout(BoxLayout):
 
         # Ajouter un fond coloré avec un Canvas
         with widget_layout.canvas.before:
-            Color(*get_color_from_hex("#F9F9F9"))  # Fond gris très clair
+            Color(*background_color)  # Fond gris très clair
             widget_layout.rect = Rectangle(size=widget_layout.size, pos=widget_layout.pos)
         widget_layout.bind(size=self._update_rect, pos=self._update_rect)
 
@@ -163,8 +250,8 @@ class MainLayout(BoxLayout):
                 text=widget,
                 size_hint=(None, None),
                 size=(dp(120), dp(50)),
-                background_color=get_color_from_hex("#4CAF50"),  # Vert vif
-                color=get_color_from_hex("#FFFFFF"),  # Texte blanc
+                background_color=primary_color,  # Vert vif
+                color=text_color,  # Texte blanc
                 bold=True
             )
             button.bind(on_release=lambda btn, w=widget: self.open_widget_tab(w))
@@ -188,13 +275,13 @@ class MainLayout(BoxLayout):
         new_layout.add_widget(Label(text=f"Contenu de {widget_name}"))
         new_layout.add_widget(Button(
             text=f"Fonctionnalité 1 de {widget_name}",
-            background_color=get_color_from_hex("#6C9BCF"),  # Bleu clair
-            color=get_color_from_hex("#FFFFFF")  # Texte blanc
+            background_color=secondary_color,  # Bleu clair
+            color=text_color  # Texte blanc
         ))
         new_layout.add_widget(Button(
             text=f"Fonctionnalité 2 de {widget_name}",
-            background_color=get_color_from_hex("#FFA726"),  # Orange énergique
-            color=get_color_from_hex("#FFFFFF")  # Texte blanc
+            background_color=accent_color,  # Orange énergique
+            color=text_color  # Texte blanc
         ))
 
         new_tab.add_widget(new_layout)
@@ -202,18 +289,30 @@ class MainLayout(BoxLayout):
         self.tab_panel.switch_to(new_tab)
 
     def create_welcome_tab(self):
-        """Crée l'onglet 'Welcome' avec une description."""
+        """Crée l'onglet 'Welcome' avec une description améliorée."""
         welcome_tab = TabbedPanelItem(text="Welcome")
         welcome_layout = BoxLayout(orientation="vertical", padding=dp(20), spacing=dp(10))
 
+        # Ajouter un logo ou une image
+        # logo = Image(source='logo.png', size_hint=(1, None), height=dp(100))
+        # welcome_layout.add_widget(logo)
+
         # Description de l'application
         description = (
-            "Team-Task-Sync est une application de gestion de tâches en équipe.\n\n"
+            "[b]Team-Task-Sync[/b] est une application de gestion de tâches en équipe.\n\n"
             "Elle permet de synchroniser les tâches entre les membres de l'équipe, "
             "de suivre les progrès et de gérer les ressources partagées.\n\n"
             "Pour commencer, utilisez les boutons ci-dessus pour ouvrir les widgets."
         )
-        welcome_layout.add_widget(Label(text=description, size_hint=(1, None), height=dp(200)))
+        welcome_label = Label(
+            text=description,
+            size_hint=(1, None),
+            height=dp(200),
+            markup=True,
+            font_size=dp(16),
+            color=get_color_from_hex(dark_color)  # Couleur de texte plus foncée
+        )
+        welcome_layout.add_widget(welcome_label)
 
         welcome_tab.add_widget(welcome_layout)
         self.tab_panel.add_widget(welcome_tab)
@@ -227,13 +326,13 @@ class MainLayout(BoxLayout):
         new_layout.add_widget(Label(text=f"Contenu de l'onglet {len(self.tab_panel.tabs) - 1}"))
         new_layout.add_widget(Button(
             text=f"Fonctionnalité 1",
-            background_color=get_color_from_hex("#6C9BCF"),  # Bleu clair
-            color=get_color_from_hex("#FFFFFF")  # Texte blanc
+            background_color=secondary_color,  # Bleu clair
+            color=text_color  # Texte blanc
         ))
         new_layout.add_widget(Button(
             text=f"Fonctionnalité 2",
-            background_color=get_color_from_hex("#FFA726"),  # Orange énergique
-            color=get_color_from_hex("#FFFFFF")  # Texte blanc
+            background_color=accent_color,  # Orange énergique
+            color=text_color  # Texte blanc
         ))
 
         new_tab.add_widget(new_layout)
@@ -242,7 +341,7 @@ class MainLayout(BoxLayout):
 
 class TeamTaskSyncApp(App):
     def build(self):
-        Window.clearcolor = get_color_from_hex("#F9F9F9")  # Fond gris très clair
+        Window.clearcolor = background_color  # Fond gris très clair
         return MainLayout()
 
 if __name__ == "__main__":
