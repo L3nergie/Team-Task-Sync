@@ -8,6 +8,7 @@ from kivy.core.window import Window
 from kivy.uix.gridlayout import GridLayout
 from kivy.metrics import dp
 from kivy.utils import get_color_from_hex
+from kivy.graphics import Color, Rectangle
 
 class MainLayout(BoxLayout):
     def __init__(self, **kwargs):
@@ -25,7 +26,6 @@ class MainLayout(BoxLayout):
         # Onglets
         self.tab_panel = TabbedPanel(
             do_default_tab=False,  # Désactive l'onglet par défaut
-            background_color=get_color_from_hex("#F4F4F4"),  # Fond des onglets
             tab_width=dp(120)  # Largeur des onglets
         )
         self.add_widget(self.tab_panel)
@@ -52,9 +52,14 @@ class MainLayout(BoxLayout):
             size_hint=(1, None),
             height=dp(50),
             padding=0,
-            spacing=0,
-            background_color=get_color_from_hex("#6C9BCF")  # Bleu clair
+            spacing=0
         )
+
+        # Ajouter un fond coloré avec un Canvas
+        with menu_bar.canvas.before:
+            Color(*get_color_from_hex("#6C9BCF"))  # Bleu clair
+            menu_bar.rect = Rectangle(size=menu_bar.size, pos=menu_bar.pos)
+        menu_bar.bind(size=self._update_rect, pos=self._update_rect)
 
         # Bouton "Fichier"
         file_button = Button(
@@ -81,6 +86,11 @@ class MainLayout(BoxLayout):
         menu_bar.add_widget(help_button)
 
         self.add_widget(menu_bar)
+
+    def _update_rect(self, instance, value):
+        """Met à jour la taille et la position du rectangle de fond."""
+        instance.rect.size = instance.size
+        instance.rect.pos = instance.pos
 
     def show_file_menu(self, instance):
         """Affiche un menu déroulant pour 'Fichier'."""
@@ -137,9 +147,14 @@ class MainLayout(BoxLayout):
             size_hint=(1, None),
             height=dp(60),
             spacing=dp(5),
-            padding=dp(10),
-            background_color=get_color_from_hex("#F9F9F9")  # Fond gris très clair
+            padding=dp(10)
         )
+
+        # Ajouter un fond coloré avec un Canvas
+        with widget_layout.canvas.before:
+            Color(*get_color_from_hex("#F9F9F9"))  # Fond gris très clair
+            widget_layout.rect = Rectangle(size=widget_layout.size, pos=widget_layout.pos)
+        widget_layout.bind(size=self._update_rect, pos=self._update_rect)
 
         # Boutons prédéfinis
         widgets = ["Assistants", "Team Chat", "Projet", "Calendrier", "Statistiques"]
